@@ -19,10 +19,10 @@ Version             ControlGit / GitHub
 
 **Features**
 
-Property price prediction based on area, BHK, bathrooms, and balconies
-Price confidence range displayed as Estimated Price ± RMSE
-Price per square foot computed and displayed in the result card
-Step-by-step progress indicator reflecting the user's position in the prediction flow
-Feature importance chart showing which property attributes drive predictions most
-Prediction history table and trend chart backed by MySQL
-Styled dark sidebar with gold accent theme
+1.Property price prediction based on area, BHK, bathrooms, and balconies
+2.Price confidence range displayed as Estimated Price ± RMSE
+3.Price per square foot computed and displayed in the result card
+4.Step-by-step progress indicator reflecting the user's position in the prediction flow
+5.Feature importance chart showing which property attributes drive predictions most
+6.Prediction history table and trend chart backed by MySQL
+7.Styled dark sidebar with gold accent theme
