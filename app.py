@@ -122,23 +122,19 @@ st.markdown("""
 RMSE = 37.58
 
 # ── Database setup ─────────────────────────────────────────────────────────
-DB_USER     = 'root'
-DB_PASSWORD = 'root'
-DB_HOST     = 'localhost'
-DB_NAME     = 'real_estate_db'
-
-engine = create_engine(f'mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}')
+# ── Database setup ─────────────────────────────────────────────────────────
+engine = create_engine('sqlite:///predictions.db')
 
 with engine.connect() as conn:
     conn.execute(text('''
         CREATE TABLE IF NOT EXISTS predictions (
-            id              INT AUTO_INCREMENT PRIMARY KEY,
-            total_sqft      FLOAT,
-            bhk             INT,
-            bath            INT,
-            balcony         INT,
-            predicted_price FLOAT,
-            timestamp       DATETIME
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            total_sqft      REAL,
+            bhk             INTEGER,
+            bath            INTEGER,
+            balcony         INTEGER,
+            predicted_price REAL,
+            timestamp       TEXT
         )
     '''))
     conn.commit()
