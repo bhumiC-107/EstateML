@@ -2,6 +2,7 @@
 
 A machine learning web application that predicts residential property prices in Bengaluru, India. Built with a tuned Random Forest Regressor and deployed via Streamlit, the application accepts property details as input and returns an estimated market price in Lakhs, along with a confidence range derived from the model's RMSE.
 
+**Demo  Link : https://estateml-dre4q7qeekrjfk95v2sjzk.streamlit.app/**
 **Overview**
 This project addresses the challenge of estimating residential property prices in Bengaluru — one of India's fastest-growing real estate markets. The model was trained on the Bengaluru House Price dataset, which contains over 13,000 property listings with features such as area, number of bedrooms, bathrooms, and balconies.
 The end-to-end pipeline covers data cleaning, feature engineering, model selection, hyperparameter tuning via GridSearchCV, and deployment as an interactive web application backed by a MySQL database for prediction logging.
