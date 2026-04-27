@@ -42,9 +42,13 @@ st.markdown("Deep-dive into the Bengaluru housing market trends powering the pre
 def load_data():
     df = pd.read_csv("bengaluru_house_prices.csv")
 
-    # Normalize column names
+    # Normalize column names FIRST
     df.columns = [c.strip().lower().replace(' ', '_') for c in df.columns]
 
+    # NOW convert to numeric (column names are guaranteed lowercase/clean)
+    df['bath'] = pd.to_numeric(df['bath'], errors='coerce')
+    df['balcony'] = pd.to_numeric(df['balcony'], errors='coerce')
+    df['total_sqft'] = pd.to_numeric(df['total_sqft'], errors='coerce')
     # Extract BHK — standard Bengaluru dataset has 'size' like "2 BHK"
     if 'size' in df.columns:
         df['bhk'] = df['size'].str.extract(r'(\d+)').astype(float)
