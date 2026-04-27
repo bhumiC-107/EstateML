@@ -11,6 +11,27 @@ st.markdown("""
 h1, h2, h3 { font-family: 'Georgia', serif; color: #1a1a2e; }
 section[data-testid="stSidebar"] { background-color: #1a1a2e; }
 section[data-testid="stSidebar"] * { color: #e2b96f !important; }
+            
+/* ── Sidebar nav page links ── */
+[data-testid="stSidebarNavLink"] p,
+[data-testid="stSidebarNavLink"] span {
+    color: #e2b96f !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px;
+}
+[data-testid="stSidebarNavLink"]:hover {
+    background-color: #2d3748 !important;
+}
+[data-testid="stSidebarNavLink"][aria-selected="true"] {
+    background-color: #2d3748 !important;
+}
+section[data-testid="stSidebar"] a {
+    color: #e2b96f !important;
+}
+/* ── Sidebar nav header/title ── */
+section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] * {
+    color: #e2b96f !important;
+}
 </style>
 """, unsafe_allow_html=True)
 

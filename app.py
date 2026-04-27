@@ -12,6 +12,13 @@ st.markdown("""
     h1 { font-family: 'Georgia', serif; color: #1a1a2e; letter-spacing: -0.5px; }
     h2, h3 { font-family: 'Georgia', serif; color: #2d2d2d; }
     section[data-testid="stSidebar"] { background-color: #1a1a2e; }
+section[data-testid="stSidebar"] * { color: #e2b96f !important; }
+[data-testid="stSidebarNavLink"] p,
+[data-testid="stSidebarNavLink"] span { color: #e2b96f !important; font-weight: 600 !important; }
+[data-testid="stSidebarNavLink"]:hover { background-color: #2d3748 !important; }
+[data-testid="stSidebarNavLink"][aria-selected="true"] { background-color: #2d3748 !important; }
+section[data-testid="stSidebar"] a { color: #e2b96f !important; }
+            
     section[data-testid="stSidebar"] h2 { color: #e2b96f !important; }
     section[data-testid="stSidebar"] button[data-testid="stNumberInputStepDown"],
     section[data-testid="stSidebar"] button[data-testid="stNumberInputStepUp"] {
@@ -115,7 +122,29 @@ st.markdown("""
     .result-meta-item { }
     .result-meta-label { color: #718096; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; }
     .result-meta-value { color: #e2e8f0; font-size: 1rem; font-weight: 600; }
-    </style>
+    
+            /* ── Sidebar nav page links ── */
+[data-testid="stSidebarNavLink"] p,
+[data-testid="stSidebarNavLink"] span {
+    color: #e2b96f !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px;
+}
+[data-testid="stSidebarNavLink"]:hover {
+    background-color: #2d3748 !important;
+}
+[data-testid="stSidebarNavLink"][aria-selected="true"] {
+    background-color: #2d3748 !important;
+}
+section[data-testid="stSidebar"] a {
+    color: #e2b96f !important;
+}
+/* ── Sidebar nav header/title ── */
+section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] * {
+    color: #e2b96f !important;
+}
+            
+            </style>
 """, unsafe_allow_html=True)
 
 # ── Constants ──────────────────────────────────────────────────────────────
