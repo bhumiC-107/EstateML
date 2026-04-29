@@ -8,15 +8,17 @@ A machine learning web application that predicts residential property prices in 
 This project addresses the challenge of estimating residential property prices in Bengaluru — one of India's fastest-growing real estate markets. The model was trained on the Bengaluru House Price dataset, which contains over 13,000 property listings with features such as area, number of bedrooms, bathrooms, and balconies.
 The end-to-end pipeline covers data cleaning, feature engineering, model selection, hyperparameter tuning via GridSearchCV, and deployment as an interactive web application backed by a MySQL database for prediction logging.
 
-**Tech Stack**
-**Layer**                **Technology**
-Language            Python 3.10+
-Web Framework       Streamlit
-Machine Learning    scikit-learn
-Data Processing     pandas, NumPy
-Model Persistence   joblib
-Database            MySQL via SQLAlchemy
-Version             ControlGit / GitHub
+##  Tech Stack
+
+| Layer               | Technology                         |
+|--------------------|----------------------------------|
+| Language           | Python 3.10+                     |
+| Web Framework      | Streamlit                        |
+| Machine Learning   | scikit-learn                     |
+| Data Processing    | pandas, NumPy                    |
+| Model Persistence  | joblib                           |
+| Database           | MySQL (via SQLAlchemy)           |
+| Version Control    | Git, GitHub                      |
 
 
 **Features**
