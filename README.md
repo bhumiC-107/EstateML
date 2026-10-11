@@ -2,6 +2,8 @@
 
 EstateML is an end-to-end machine learning web application designed to deliver data-driven residential property valuations across the Bengaluru housing market. Combining interactive consumer tools with an enterprise MLOps workflow, EstateML integrates **Streamlit**, **scikit-learn**, **AutoML**, **MLflow**, **DVC**, and **SQLite**.
 
+Try our website here : https://estateml-dre4q7qeekrjfk95v2sjzk.streamlit.app/
+
 ---
 
 ## 1. Problem Statement & Objectives
@@ -144,41 +146,6 @@ The table below reflects the actual benchmark results logged in `artifacts/autom
 
 ---
 
-## 7. Installation & Local Setup
-
-### Prerequisites
-* Windows 10/11 with PowerShell (or macOS/Linux terminal)
-* Python 3.10 to 3.13 installed and added to PATH
-* Git
-
-### Step-by-Step Instructions
-
-1. **Clone the repository**:
-   ```powershell
-   git clone https://github.com/bhumiC-107/EstateML.git
-   cd EstateML
-   ```
-
-2. **Create and activate a virtual environment**:
-   ```powershell
-   # Windows PowerShell
-   py -m venv .venv
-   .venv\Scripts\Activate.ps1
-   ```
-
-3. **Install dependencies**:
-   ```powershell
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
-
-4. **Launch the Streamlit Web Application**:
-   ```powershell
-   streamlit run app.py
-   ```
-   Open your browser at `http://localhost:8501`.
-
----
 
 ## 8. Running Comparisons, Tests & MLflow
 
