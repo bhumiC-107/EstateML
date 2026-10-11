@@ -1,0 +1,20 @@
+﻿stages:
+  train:
+    cmd: python -m estate_ml.train_automl --data ${data.path} --test-size ${data.test_size} --random-state ${data.random_state}
+    deps:
+      - estate_ml/train_automl.py
+      - ${data.path}
+      - params.yaml
+    params:
+      - data.path
+      - data.test_size
+      - data.random_state
+      - training.models
+      - training.cv_folds
+      - training.random_forest
+      - training.extra_trees
+      - training.hist_gradient_boosting
+    outs:
+      - artifacts/automl_model.joblib
+      - artifacts/automl_metrics.json
+      - artifacts/automl_feature_columns.json

@@ -1,1 +1,19 @@
+# Environments
 venv/
+.venv/
+env/
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Local databases & run caches
+predictions.db
+mlflow.db
+mlruns/
+
+# System / OS
+.DS_Store
+Thumbs.db

@@ -2,34 +2,95 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 st.set_page_config(page_title="Market Insights", layout="wide")
 
 st.markdown("""
 <style>
-.stApp { background-color: #f5f5f0; }
-h1, h2, h3 { font-family: 'Georgia', serif; color: #1a1a2e; }
-section[data-testid="stSidebar"] { background-color: #1a1a2e; }
-section[data-testid="stSidebar"] * { color: #e2b96f !important; }
-            
-/* ── Sidebar nav page links ── */
+/* ── Page Background & Base Text ── */
+.stApp, [data-testid="stAppViewContainer"] {
+    background-color: #f5f5f0 !important;
+    color: #202238 !important;
+}
+
+[data-testid="stAppViewContainer"] .main,
+[data-testid="stAppViewContainer"] .main p,
+[data-testid="stAppViewContainer"] .main li,
+[data-testid="stAppViewContainer"] .main label,
+[data-testid="stAppViewContainer"] .main span,
+[data-testid="stAppViewContainer"] .main div[data-testid="stMarkdownContainer"] {
+    color: #202238 !important;
+}
+
+/* ── Typography & Headings ── */
+h1, h2, h3, h4,
+[data-testid="stAppViewContainer"] .main h1,
+[data-testid="stAppViewContainer"] .main h2,
+[data-testid="stAppViewContainer"] .main h3,
+[data-testid="stAppViewContainer"] .main h4,
+[data-testid="stHeadingWithActionElements"] * {
+    font-family: Georgia, 'Times New Roman', serif !important;
+    color: #1a1a2e !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+}
+
+/* ── Captions & Subtitles ── */
+[data-testid="stCaptionContainer"],
+[data-testid="stAppViewContainer"] .main [data-testid="stCaptionContainer"],
+.stCaption {
+    color: #596174 !important;
+}
+
+/* ── Metrics ── */
+[data-testid="stMetric"] {
+    background: #ffffff !important;
+    border: 1px solid #d9deea !important;
+    border-radius: 10px !important;
+    padding: 0.8rem 1rem !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+}
+[data-testid="stMetricLabel"],
+[data-testid="stMetricLabel"] * {
+    color: #596174 !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+[data-testid="stMetricValue"],
+[data-testid="stMetricValue"] * {
+    color: #1a1a2e !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+}
+
+/* ── Dividers ── */
+hr, [data-testid="stDivider"] {
+    border-color: #d9deea !important;
+}
+
+/* ── Sidebar ── */
+section[data-testid="stSidebar"] {
+    background-color: #1a1a2e !important;
+}
+section[data-testid="stSidebar"] * {
+    color: #e2b96f !important;
+}
 [data-testid="stSidebarNavLink"] p,
 [data-testid="stSidebarNavLink"] span {
     color: #e2b96f !important;
     font-weight: 600 !important;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.3px !important;
 }
-[data-testid="stSidebarNavLink"]:hover {
-    background-color: #2d3748 !important;
-}
+[data-testid="stSidebarNavLink"]:hover,
 [data-testid="stSidebarNavLink"][aria-selected="true"] {
     background-color: #2d3748 !important;
 }
 section[data-testid="stSidebar"] a {
-    color: #e2b96f !important;
-}
-/* ── Sidebar nav header/title ── */
-section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] * {
     color: #e2b96f !important;
 }
 </style>
@@ -40,7 +101,10 @@ st.markdown("Deep-dive into the Bengaluru housing market trends powering the pre
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("bengaluru_house_prices.csv")
+    csv_path = BASE_DIR / "bengaluru_house_prices.csv"
+    if not csv_path.exists():
+        csv_path = Path("bengaluru_house_prices.csv")
+    df = pd.read_csv(csv_path)
 
     # Normalize column names FIRST
     df.columns = [c.strip().lower().replace(' ', '_') for c in df.columns]
@@ -203,4 +267,4 @@ if 'bhk' in df.columns:
                       showlegend=False, font_color='#1a1a2e')
     st.plotly_chart(fig, use_container_width=True)
 
-st.caption(" Data: Bengaluru House Prices Dataset  |  Analysis by Person 2 — Data Analyst")
+st.caption("EstateML Market Insights · Bengaluru Residential Real Estate Trends")

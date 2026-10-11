@@ -8,59 +8,209 @@ st.set_page_config(page_title="Financial Tools", layout="wide")
 
 st.markdown("""
 <style>
-/* ── Base ── */
-.stApp { background-color: #f5f5f0; }
-h1, h2, h3, h4 { font-family: 'Georgia', serif; color: #1a1a2e; }
+/* ── Page Background & Base Text ── */
+.stApp, [data-testid="stAppViewContainer"] {
+    background-color: #f5f5f0 !important;
+    color: #202238 !important;
+}
+
+[data-testid="stAppViewContainer"] .main,
+[data-testid="stAppViewContainer"] .main p,
+[data-testid="stAppViewContainer"] .main li,
+[data-testid="stAppViewContainer"] .main label,
+[data-testid="stAppViewContainer"] .main span,
+[data-testid="stAppViewContainer"] .main div[data-testid="stMarkdownContainer"] {
+    color: #202238 !important;
+}
+
+/* ── Typography & Headings ── */
+h1, h2, h3, h4,
+[data-testid="stAppViewContainer"] .main h1,
+[data-testid="stAppViewContainer"] .main h2,
+[data-testid="stAppViewContainer"] .main h3,
+[data-testid="stAppViewContainer"] .main h4,
+[data-testid="stHeadingWithActionElements"] * {
+    font-family: Georgia, 'Times New Roman', serif !important;
+    color: #1a1a2e !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+}
+
+/* ── Captions & Subtitles ── */
+[data-testid="stCaptionContainer"],
+[data-testid="stAppViewContainer"] .main [data-testid="stCaptionContainer"],
+.stCaption {
+    color: #596174 !important;
+}
+
+/* ── Tabs ── */
+button[data-baseweb="tab"] {
+    color: #596174 !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+}
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: #1a1a2e !important;
+    font-weight: 700 !important;
+}
+div[data-baseweb="tab-highlight"] {
+    background-color: #e2b96f !important;
+}
+
+/* ── Input Labels & Fields ── */
+[data-testid="stWidgetLabel"] label,
+[data-testid="stWidgetLabel"] p,
+[data-testid="stWidgetLabel"] div {
+    color: #1a1a2e !important;
+    font-weight: 600 !important;
+}
+
+[data-testid="stAppViewContainer"] .main [data-baseweb="input"] {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+}
+
+[data-testid="stAppViewContainer"] .main [data-baseweb="input"] input {
+    color: #1a1a2e !important;
+    -webkit-text-fill-color: #1a1a2e !important;
+}
+
+[data-testid="stNumberInputStepUp"],
+[data-testid="stNumberInputStepDown"] {
+    color: #1a1a2e !important;
+}
+
+/* ── Sliders ── */
+[data-testid="stSlider"] div[data-testid="stWidgetLabel"] p {
+    color: #1a1a2e !important;
+    font-weight: 600 !important;
+}
+[data-testid="stSlider"] div[role="slider"] {
+    background-color: #1a1a2e !important;
+    border-color: #e2b96f !important;
+}
+[data-testid="stSlider"] .st-bx {
+    background: #e2b96f !important;
+}
+
+/* ── Metrics ── */
+[data-testid="stMetric"] {
+    background: #ffffff !important;
+    border: 1px solid #d9deea !important;
+    border-radius: 10px !important;
+    padding: 0.8rem 1rem !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+}
+[data-testid="stMetricLabel"],
+[data-testid="stMetricLabel"] * {
+    color: #596174 !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+[data-testid="stMetricValue"],
+[data-testid="stMetricValue"] * {
+    color: #1a1a2e !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+}
+
+/* ── Buttons ── */
+div.stButton > button,
+div[data-testid="stDownloadButton"] > button {
+    background-color: #1a1a2e !important;
+    color: #e2b96f !important;
+    border: 1px solid #1a1a2e !important;
+    padding: 0.6rem 2rem !important;
+    border-radius: 8px !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
+}
+div.stButton > button:hover,
+div[data-testid="stDownloadButton"] > button:hover {
+    background-color: #0f3460 !important;
+    color: #ffffff !important;
+    border-color: #0f3460 !important;
+}
+
+/* ── Result Cards ── */
+.result-card {
+    background: #1a1a2e !important;
+    border-radius: 12px !important;
+    padding: 1.5rem 2rem !important;
+    margin-top: 0.5rem !important;
+    border: 1px solid #2d3748 !important;
+}
+.result-card * {
+    color: #f7fafc !important;
+}
+.result-title {
+    color: #e2b96f !important;
+    font-size: 1.7rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.2rem !important;
+}
+.result-sub {
+    color: #c0c8d8 !important;
+    font-size: 0.88rem !important;
+    margin-bottom: 1rem !important;
+}
+.result-divider {
+    border-top: 1px solid #2d3748 !important;
+    margin: 0.8rem 0 !important;
+}
+.result-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 0.25rem 0 !important;
+}
+.result-key {
+    color: #a0aec0 !important;
+    font-size: 0.85rem !important;
+}
+.result-val {
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+}
+
+/* ── Tables ── */
+[data-testid="stDataFrame"], [data-testid="stTable"] {
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    border: 1px solid #d9deea !important;
+    background: #ffffff !important;
+}
+
+/* ── Alerts ── */
+div[data-testid="stAlert"] {
+    border-radius: 8px !important;
+}
+div[data-testid="stAlert"] * {
+    color: #1a1a2e !important;
+}
 
 /* ── Sidebar ── */
-section[data-testid="stSidebar"] { background-color: #1a1a2e; }
-section[data-testid="stSidebar"] * { color: #e2b96f !important; }
-
-/* ── Button ── */
-div.stButton > button {
-    background-color: #1a1a2e; color: #e2b96f;
-    border: none; padding: 0.6rem 2rem;
-    border-radius: 8px; font-size: 0.95rem; font-weight: 600;
+section[data-testid="stSidebar"] {
+    background-color: #1a1a2e !important;
 }
-div.stButton > button:hover { background-color: #0f3460; color: #e2b96f; }
-
-/* ── Slider accent ── */
-[data-testid="stSlider"] .st-bx { background: #e2b96f !important; }
-.stSlider [data-baseweb="slider"] [role="slider"] { background: #e2b96f !important; }
-
-/* ── Result card ── */
-.result-card {
-    background: #1a1a2e;
-    border-radius: 12px;
-    padding: 1.5rem 2rem;
-    margin-top: 0.5rem;
-    border: 1px solid #2d3748;
+section[data-testid="stSidebar"] * {
+    color: #e2b96f !important;
 }
-.result-title  { color: #e2b96f;  font-size: 1.7rem; font-weight: 700; margin-bottom: 0.2rem; }
-.result-sub    { color: #a0aec0;  font-size: 0.88rem; margin-bottom: 1rem; }
-.result-divider{ border-top: 1px solid #2d3748; margin: 0.8rem 0; }
-.result-row    { display: flex; justify-content: space-between; padding: 0.25rem 0; }
-.result-key    { color: #a0aec0; font-size: 0.85rem; }
-.result-val    { color: #f7fafc; font-size: 0.95rem; font-weight: 600; }
-            
-/* ── Sidebar nav page links ── */
 [data-testid="stSidebarNavLink"] p,
 [data-testid="stSidebarNavLink"] span {
     color: #e2b96f !important;
     font-weight: 600 !important;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.3px !important;
 }
-[data-testid="stSidebarNavLink"]:hover {
-    background-color: #2d3748 !important;
-}
+[data-testid="stSidebarNavLink"]:hover,
 [data-testid="stSidebarNavLink"][aria-selected="true"] {
     background-color: #2d3748 !important;
 }
 section[data-testid="stSidebar"] a {
-    color: #e2b96f !important;
-}
-/* ── Sidebar nav header/title ── */
-section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] * {
     color: #e2b96f !important;
 }
 </style>
@@ -283,4 +433,4 @@ with tab3:
                        showlegend=False, font_color='#1a1a2e')
     st.plotly_chart(fig2, use_container_width=True)
 
-st.caption(" Financial Tools Module  |  Built by Person 4 — Business Analyst")
+st.caption("EstateML Financial Tools · Home Loan EMI, Affordability & Rental Yield Calculator")
