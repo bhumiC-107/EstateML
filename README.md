@@ -19,29 +19,29 @@ Estimating residential real estate values in fast-growing metropolitan markets l
 
 ## 2. Key Features
 
-* **🏡 Interactive Property Valuation (`app.py`)**:
+* **Interactive Property Valuation (`app.py`)**:
   * Clean, responsive two-column interface for specifying total area, bedrooms, bathrooms, and balconies.
   * Instant market value prediction in Lakhs with estimated price per square foot.
   * Production inference pipeline using scikit-learn models and StandardScaler transforms.
-* **⚖️ Side-by-Side Property Comparator (`pages/Compare.py`)**:
+* **Side-by-Side Property Comparator (`pages/Compare.py`)**:
   * Direct comparison of two properties (Property A vs. Property B).
   * Evaluates relative price-to-area value with radar charts and feature breakdown tables.
   * One-click CSV export of comparative analysis.
-* **📊 Market Insights & Exploratory Data Analysis (`pages/EDA.py`)**:
+* **Market Insights & Exploratory Data Analysis (`pages/EDA.py`)**:
   * Visual exploration of over 13,000 listings from the Bengaluru House Price dataset.
   * Key performance indicators, price distribution histograms, bedroom-tier analysis, and an interactive feature correlation heatmap.
-* **💳 Financial Tools & Mortgage Calculators (`pages/finance.py`)**:
+* **Financial Tools & Mortgage Calculators (`pages/finance.py`)**:
   * **Loan EMI Calculator**: Monthly EMI, total interest, and complete multi-year principal vs. interest amortization breakdown.
   * **Affordability Estimator**: Maximum property budget derived from monthly income, existing loan obligations, and FOIR (Fixed Obligation to Income Ratio) limits.
   * **Rental Yield Calculator**: Gross annual rental yields benchmarked against major Indian metropolitan averages.
-* **🕒 Prediction History & Persistence**:
+* **Prediction History & Persistence**:
   * All user valuation requests are automatically persisted to a local SQLite database (`predictions.db`).
   * Real-time query of recent valuations alongside interactive historical price trend charts.
-* **🧪 Model Performance & AutoML Benchmarking (`pages/Model_Lab.py`)**:
+* **Model Performance & AutoML Benchmarking (`pages/Model_Lab.py`)**:
   * Live display of cross-validation and holdout test metrics across ensemble algorithms.
   * Interactive error metrics comparison chart (RMSE & MAE).
   * Target-leakage disclosures and collapsible technical MLflow architecture details.
-* **🔄 Data & Experiment Pipelines**:
+* **Data & Experiment Pipelines**:
   * **MLflow Tracking**: Logs model runs, hyperparameters, metrics, and serialized artifacts.
   * **DVC Pipeline (`dvc.yaml`)**: Manages end-to-end data dependencies and pipeline stages.
 
