@@ -234,3 +234,4 @@ To maintain academic and professional integrity, the following project character
 ## 12. License
 
 This project is developed for educational and demonstration purposes under the MIT License.
+
