@@ -6,6 +6,11 @@ import pandas as pd
 
 st.set_page_config(page_title="Financial Tools", layout="wide")
 
+# A comparison can pass its estimate into the EMI calculator.
+comparison_price = st.session_state.pop("comparison_property_price_lakhs", None)
+if comparison_price is not None:
+    st.session_state["emi_property_price_lakhs"] = float(comparison_price)
+
 st.markdown("""
 <style>
 /* ── Page Background & Base Text ── */
@@ -219,7 +224,7 @@ section[data-testid="stSidebar"] a {
 st.title("🏦 Financial Planning Tools")
 st.markdown("Smart tools to help buyers make data-driven financial decisions.")
 
-tab1, tab2, tab3 = st.tabs(["💰 EMI Calculator", "✅ Affordability Checker", "📈 Rental Yield"])
+tab1, tab2, tab3, tab4 = st.tabs(["💰 EMI Calculator", "✅ Affordability Checker", "📈 Rental Yield", "🏠 Buy vs Rent"])
 
 # ═══════════════════════════════════════════════════════════════════════════
 # TAB 1 — EMI Calculator
@@ -231,7 +236,10 @@ with tab1:
     c1, c2 = st.columns([1, 1])
 
     with c1:
-        price    = st.number_input("Property Price (₹ Lakhs)", 5.0, 1000.0, 50.0, 5.0)
+        price    = st.number_input(
+            "Property Price (₹ Lakhs)", 5.0, 2000.0, 50.0, 5.0,
+            key="emi_property_price_lakhs",
+        )
         down_pct = st.slider("Down Payment (%)", 10, 50, 20, 5,
                               help="RBI mandates min 10–20% down payment")
         rate     = st.number_input("Annual Interest Rate (%)", 5.0, 20.0, 8.5, 0.1)
@@ -270,7 +278,7 @@ with tab1:
     fig.update_layout(paper_bgcolor='#f5f5f0', height=300,
                       legend=dict(bgcolor='#f5f5f0', font=dict(color='#1a1a2e')),
                       font_color='#1a1a2e')
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # Amortization schedule
     st.markdown("#### Yearly Amortization Schedule")
@@ -290,7 +298,7 @@ with tab1:
             "Balance (L)":    f"₹{balance/100000:.2f}",
         })
     sched_df = pd.DataFrame(rows)
-    st.dataframe(sched_df, use_container_width=True, hide_index=True)
+    st.dataframe(sched_df, width="stretch", hide_index=True)
     st.download_button("⬇️ Download Schedule as CSV",
                        data=sched_df.to_csv(index=False),
                        file_name="emi_schedule.csv", mime="text/csv")
@@ -342,7 +350,7 @@ with tab2:
         }
     ))
     fig.update_layout(paper_bgcolor='#f5f5f0', height=280, font_color='#1a1a2e')
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     if max_price_l > 0:
         st.success(f"""
@@ -351,7 +359,7 @@ with tab2:
          **Above budget:** > ₹{max_price_l:.1f} Lakhs
         """)
     else:
-        st.error(" Existing EMIs exceed the 50% FOIR limit. Consider reducing debt first.")
+        st.info("Based on these details, there may not be enough monthly income left for a new home loan. Try lowering existing loan payments or adjusting the income details.")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -415,7 +423,7 @@ with tab3:
                       plot_bgcolor='#f5f5f0', paper_bgcolor='#f5f5f0',
                       font_color='#1a1a2e',
                       legend=dict(bgcolor='#f5f5f0', font=dict(color='#1a1a2e')))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # City benchmarks
     st.markdown("####  Rental Yield Benchmarks — Indian Cities")
@@ -431,6 +439,109 @@ with tab3:
                                         "Hyderabad": "#1a1a2e"})
     fig2.update_layout(plot_bgcolor='#f5f5f0', paper_bgcolor='#f5f5f0',
                        showlegend=False, font_color='#1a1a2e')
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, width="stretch")
 
-st.caption("EstateML Financial Tools · Home Loan EMI, Affordability & Rental Yield Calculator")
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TAB 4 — Buy versus rent
+# ═══════════════════════════════════════════════════════════════════════════
+with tab4:
+    st.subheader("Buy versus rent comparison")
+    st.markdown(
+        "Compare estimated home equity with an illustrative renter investment. "
+        "If you opened this from a property estimate, its projected base values are prefilled."
+    )
+
+    forecast_frame = st.session_state.get("future_value_scenarios")
+    estimate_lakhs = st.session_state.get("future_value_current_price_lakhs")
+    if estimate_lakhs is None:
+        estimate_lakhs = st.session_state.get("emi_property_price_lakhs", 100.0)
+        st.info("No property forecast was passed in. Enter an estimated price and appreciation assumption below.")
+
+    buy_col, rent_col = st.columns(2)
+    with buy_col:
+        buy_price = st.number_input(
+            "Estimated purchase price (₹ lakh)", 5.0, 2000.0,
+            float(min(max(estimate_lakhs, 5.0), 2000.0)), 1.0,
+            key="buy_rent_price",
+        )
+        down_payment_pct = st.slider("Down payment (%)", 10, 60, 20, 5, key="buy_rent_down")
+        loan_rate_pct = st.number_input("Home-loan annual interest (%)", 0.0, 25.0, 8.5, 0.1, key="buy_rent_rate")
+        loan_years = st.slider("Loan tenure (years)", 1, 30, 20, key="buy_rent_tenure")
+        maintenance = st.number_input("Starting monthly maintenance (₹)", 0, 100000, 3000, 500, key="buy_rent_maintenance")
+    with rent_col:
+        starting_rent = st.number_input("Starting monthly rent (₹)", 0, 1000000, 25000, 1000, key="buy_rent_monthly_rent")
+        rent_increase_pct = st.number_input("Annual rent and maintenance increase (%)", 0.0, 20.0, 5.0, 0.5, key="buy_rent_inflation")
+        investment_return_pct = st.number_input("Annual return on renter investments (%)", 0.0, 30.0, 7.0, 0.5, key="buy_rent_return")
+        fallback_appreciation_pct = st.number_input("Annual property appreciation if no estimate was passed (%)", -10.0, 20.0, 6.0, 0.5, key="buy_rent_appreciation")
+
+    horizon = int(st.session_state.get("future_value_horizon", 5))
+    horizon = min(max(horizon, 1), 10)
+    monthly_rate = loan_rate_pct / 1200
+    loan_principal = buy_price * 100000 * (1 - down_payment_pct / 100)
+    month_count = loan_years * 12
+    if monthly_rate == 0:
+        monthly_emi = loan_principal / month_count
+    else:
+        monthly_emi = loan_principal * monthly_rate * (1 + monthly_rate) ** month_count / ((1 + monthly_rate) ** month_count - 1)
+
+    scenario_rows = []
+    renter_portfolio = buy_price * 100000 * down_payment_pct / 100
+    mortgage_balance = loan_principal
+    monthly_return = (1 + investment_return_pct / 100) ** (1 / 12) - 1
+    annual_cost_increase = rent_increase_pct / 100
+    forecast_lookup = {}
+    forecast_base_price = float(st.session_state.get("future_value_current_price_lakhs", 0.0) or 0.0)
+    if isinstance(forecast_frame, pd.DataFrame) and "Year" in forecast_frame:
+        forecast_lookup = forecast_frame.set_index("Year").get("Base value (₹ lakh)", pd.Series(dtype=float)).to_dict()
+    for year in range(1, horizon + 1):
+        current_rent = starting_rent * (1 + annual_cost_increase) ** (year - 1)
+        current_maintenance = maintenance * (1 + annual_cost_increase) ** (year - 1)
+        for _ in range(12):
+            if mortgage_balance > 0:
+                interest_payment = mortgage_balance * monthly_rate
+                principal_payment = min(mortgage_balance, monthly_emi - interest_payment)
+                mortgage_balance = max(0.0, mortgage_balance - principal_payment)
+                actual_loan_payment = principal_payment + interest_payment
+            else:
+                actual_loan_payment = 0.0
+            monthly_owner_cost = actual_loan_payment + current_maintenance
+            renter_portfolio = max(0.0, renter_portfolio * (1 + monthly_return) + (monthly_owner_cost - current_rent))
+
+        if year in forecast_lookup:
+            scale_to_purchase_price = buy_price / forecast_base_price if forecast_base_price > 0 else 1.0
+            property_value_lakhs = float(forecast_lookup[year]) * scale_to_purchase_price
+        else:
+            property_value_lakhs = buy_price * (1 + fallback_appreciation_pct / 100) ** year
+        owner_equity_lakhs = property_value_lakhs * 100000 - mortgage_balance
+        renter_wealth_lakhs = renter_portfolio
+        scenario_rows.append({
+            "Year": year,
+            "Owner equity (₹ lakh)": owner_equity_lakhs / 100000,
+            "Renter investment balance (₹ lakh)": renter_wealth_lakhs / 100000,
+            "Projected home value (₹ lakh)": property_value_lakhs,
+        })
+
+    comparison = pd.DataFrame(scenario_rows)
+    st.caption(
+        "The renter starts by investing the down payment, then invests (or draws from) the "
+        "monthly difference between ownership costs and rent. Maintenance and rent rise at the "
+        "rate you entered. The calculation excludes taxes, purchase/sale costs, insurance, "
+        "rent deposits, and personal circumstances. It is an illustration, not financial advice."
+    )
+    st.line_chart(
+        comparison.set_index("Year")[["Owner equity (₹ lakh)", "Renter investment balance (₹ lakh)"]],
+        y_label="Illustrative wealth (₹ lakh)",
+        height=330,
+    )
+    st.dataframe(comparison.round(1), width="stretch", hide_index=True)
+
+    buy_rent_break_even = comparison.loc[
+        comparison["Owner equity (₹ lakh)"] >= comparison["Renter investment balance (₹ lakh)"], "Year"
+    ]
+    if not buy_rent_break_even.empty:
+        st.metric("First year projected owner equity reaches renter investments", f"Year {int(buy_rent_break_even.iloc[0])}")
+    else:
+        st.info("Owner equity does not reach the renter investment balance within this projection horizon under these assumptions.")
+
+st.caption("EstateML Financial Tools · EMI, affordability, rental yield, and buy-versus-rent scenarios")

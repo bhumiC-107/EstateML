@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
-import joblib
-import plotly.graph_objects as go
+import html
 from pathlib import Path
+from estate_ml.property_model import load_property_artifacts, predict_property
+from estate_ml.property_ui import friendly_input_message, render_property_inputs
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -166,33 +167,19 @@ section[data-testid="stSidebar"] a {
 </style>
 """, unsafe_allow_html=True)
 
-RMSE = 37.58
-
 @st.cache_resource
 def load_assets():
-    scaler = joblib.load(BASE_DIR / 'scaler.joblib')
-    model  = joblib.load(BASE_DIR / 'final_model.joblib')
-    return scaler, model
+    return load_property_artifacts(BASE_DIR / "artifacts" / "model")
 
-scaler, model = load_assets()
+model, model_metadata = load_assets()
+model_categories = model_metadata.get("known_categories_from_random_training_partition", {})
+locality_options = model_categories.get("location", [])
 
-def predict_price(sqft, bhk, bath, balcony):
-    df = pd.DataFrame([{
-        'total_sqft':   sqft,
-        'bhk':          bhk,
-        'bath':         bath,
-        'balcony':      balcony,
-        'price_per_sqft': 0,
-        'sqft_per_bhk': sqft / bhk,
-        'bath_per_bhk': bath / bhk
-    }])
-    df = df[scaler.feature_names_in_]
-    scaled = pd.DataFrame(scaler.transform(df), columns=scaler.feature_names_in_)
-    return round(model.predict(scaled)[0], 2)
 
 # ── Page Header ───────────────────────────────────────────────────────────
 st.title("⚖️ Property Comparator")
-st.markdown("Enter details for two properties and compare their estimated prices side by side.")
+st.markdown("Compare two properties using the same model trained on curated Bengaluru listings.")
+st.caption("Listing prices can differ from completed sale prices; treat these as estimates, not formal valuations.")
 
 st.divider()
 
@@ -201,61 +188,75 @@ col1, div, col2 = st.columns([5, 1, 5])
 
 with col1:
     with st.container(border=True):
-        st.markdown("<h3 style='margin-top:0;font-size:1.2rem;font-weight:700;color:#1a1a2e;'>🏠 Property A</h3>", unsafe_allow_html=True)
-        a_sqft   = st.number_input("Total Sqft",  100.0, 10000.0, 1000.0, 50.0, key="a_sqft")
-        a_bhk    = st.number_input("BHK",         1,     10,      2,             key="a_bhk")
-        a_bath   = st.number_input("Bathrooms",   1,     10,      2,             key="a_bath")
-        a_bal    = st.number_input("Balconies",   0,     5,       1,             key="a_bal")
+        property_a = render_property_inputs(
+            title="Property A", key="compare_a", localities=locality_options,
+            categories=model_categories, area_default=1000,
+        )
 
 with div:
     st.markdown("<div style='text-align:center;font-size:1.6rem;color:#596174;font-weight:800;margin-top:7rem;'>VS</div>", unsafe_allow_html=True)
 
 with col2:
     with st.container(border=True):
-        st.markdown("<h3 style='margin-top:0;font-size:1.2rem;font-weight:700;color:#1a1a2e;'>🏢 Property B</h3>", unsafe_allow_html=True)
-        b_sqft   = st.number_input("Total Sqft",  100.0, 10000.0, 1500.0, 50.0, key="b_sqft")
-        b_bhk    = st.number_input("BHK",         1,     10,      3,             key="b_bhk")
-        b_bath   = st.number_input("Bathrooms",   1,     10,      3,             key="b_bath")
-        b_bal    = st.number_input("Balconies",   0,     5,       2,             key="b_bal")
+        property_b = render_property_inputs(
+            title="Property B", key="compare_b", localities=locality_options,
+            categories=model_categories, area_default=1500,
+        )
 
 st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
 _, btn_col, _ = st.columns([3, 4, 3])
 with btn_col:
-    compare_clicked = st.button("⚖️ Compare Properties", use_container_width=True)
+    compare_clicked = st.button("⚖️ Compare Properties", width="stretch")
 
 # ── Results ───────────────────────────────────────────────────────────────
 if compare_clicked:
-    pa = predict_price(a_sqft, a_bhk, a_bath, a_bal)
-    pb = predict_price(b_sqft, b_bhk, b_bath, b_bal)
+    try:
+        property_a_price = predict_property(model, property_a)
+        property_b_price = predict_property(model, property_b)
+    except (TypeError, ValueError) as exc:
+        st.info(friendly_input_message(exc))
+        st.stop()
 
-    pps_a = pa * 100000 / a_sqft
-    pps_b = pb * 100000 / b_sqft
+    property_a_area_sqft = property_a["area_sqft"]
+    property_b_area_sqft = property_b["area_sqft"]
+    property_a_bhk = property_a["BHK"]
+    property_b_bhk = property_b["BHK"]
+    property_a_bathrooms = property_a["bathrooms"]
+    property_b_bathrooms = property_b["bathrooms"]
+    property_a_balconies = property_a["balconies"]
+    property_b_balconies = property_b["balconies"]
+    property_a_location = property_a["location"]
+    property_b_location = property_b["location"]
+    property_a_price_per_sqft = property_a_price * 100000 / property_a_area_sqft
+    property_b_price_per_sqft = property_b_price * 100000 / property_b_area_sqft
 
-    winner = "A" if pa < pb else "B"  # lower price = better value (same features)
+    lower_estimate = (
+        "A" if property_a_price < property_b_price
+        else "B" if property_b_price < property_a_price
+        else None
+    )
 
     st.markdown("###  Comparison Results")
 
     r1, r2 = st.columns(2)
 
     with r1:
-        badge = '<div class="winner-badge"> Better Value</div>' if winner == "A" else ''
+        badge = '<div class="winner-badge">Lower estimate</div>' if lower_estimate == "A" else ''
         st.markdown(f"""
         <div class="prop-card">
-            <div class="prop-label">Property A · {int(a_bhk)} BHK · {int(a_sqft)} sqft</div>
-            <div class="prop-price">₹{pa:.2f} L</div>
-            <div class="prop-range">Range: ₹{max(0, pa-RMSE):.2f} – ₹{pa+RMSE:.2f} Lakhs</div>
+            <div class="prop-label">Property A · {html.escape(str(property_a_location))} · {int(property_a_bhk)} BHK · {int(property_a_area_sqft)} sqft</div>
+            <div class="prop-price">₹{property_a_price:.2f} L</div>
             {badge}
         </div>
         """, unsafe_allow_html=True)
 
     with r2:
-        badge = '<div class="winner-badge"> Better Value</div>' if winner == "B" else ''
+        badge = '<div class="winner-badge">Lower estimate</div>' if lower_estimate == "B" else ''
         st.markdown(f"""
         <div class="prop-card">
-            <div class="prop-label">Property B · {int(b_bhk)} BHK · {int(b_sqft)} sqft</div>
-            <div class="prop-price">₹{pb:.2f} L</div>
-            <div class="prop-range">Range: ₹{max(0, pb-RMSE):.2f} – ₹{pb+RMSE:.2f} Lakhs</div>
+            <div class="prop-label">Property B · {html.escape(str(property_b_location))} · {int(property_b_bhk)} BHK · {int(property_b_area_sqft)} sqft</div>
+            <div class="prop-price">₹{property_b_price:.2f} L</div>
             {badge}
         </div>
         """, unsafe_allow_html=True)
@@ -264,49 +265,58 @@ if compare_clicked:
     st.markdown("###  Feature-by-Feature Breakdown")
     metrics_df = pd.DataFrame({
         "Metric":          ["Predicted Price (L)", "Price/Sqft (₹)", "Total Area (sqft)", "BHK", "Bathrooms", "Balconies"],
-        "Property A":      [f"₹{pa:.2f}",          f"₹{pps_a:,.0f}", f"{a_sqft:.0f}",    str(int(a_bhk)), str(int(a_bath)), str(int(a_bal))],
-        "Property B":      [f"₹{pb:.2f}",          f"₹{pps_b:,.0f}", f"{b_sqft:.0f}",    str(int(b_bhk)), str(int(b_bath)), str(int(b_bal))],
+        "Property A": [f"₹{property_a_price:.2f}", f"₹{property_a_price_per_sqft:,.0f}", f"{property_a_area_sqft:.0f}", str(int(property_a_bhk)), str(int(property_a_bathrooms)), str(int(property_a_balconies))],
+        "Property B": [f"₹{property_b_price:.2f}", f"₹{property_b_price_per_sqft:,.0f}", f"{property_b_area_sqft:.0f}", str(int(property_b_bhk)), str(int(property_b_bathrooms)), str(int(property_b_balconies))],
     })
-    st.dataframe(metrics_df, use_container_width=True, hide_index=True)
+    st.dataframe(metrics_df, width="stretch", hide_index=True)
+    st.caption("The lower estimate is not necessarily the better value. Compare properties with similar condition, age, floor, and amenities.")
 
-    # Radar chart
-    st.markdown("###  Radar Comparison")
+    # Give buyers a simple summary based on the priorities they can compare.
+    st.markdown("### Quick summary")
+    if lower_estimate:
+        price_gap = abs(property_a_price - property_b_price)
+        st.markdown(
+            f"- **Lower upfront estimate:** Property {lower_estimate} is about ₹{price_gap:,.2f} lakh less."
+        )
+    else:
+        st.markdown("- **Estimated price:** Both properties have the same estimate.")
 
-    def norm(val, mn, mx):
-        return (val - mn) / (mx - mn) if mx != mn else 0.5
+    lower_cost_sqft = "A" if property_a_price_per_sqft < property_b_price_per_sqft else "B" if property_b_price_per_sqft < property_a_price_per_sqft else None
+    if lower_cost_sqft:
+        st.markdown(
+            f"- **Lower estimated cost per square foot:** Property {lower_cost_sqft} "
+            f"(₹{min(property_a_price_per_sqft, property_b_price_per_sqft):,.0f}/sq ft). "
+            "This can help compare space for the price when the properties are otherwise similar."
+        )
+    else:
+        st.markdown("- **Cost per square foot:** Both properties are about the same.")
 
-    categories = ['Price (L)', 'Area (sqft)', 'BHK', 'Bathrooms', 'Price/Sqft']
-    vals_a = [
-        norm(pa,    min(pa,pb),    max(pa,pb)),
-        norm(a_sqft,min(a_sqft,b_sqft), max(a_sqft,b_sqft)),
-        norm(a_bhk, min(a_bhk,b_bhk),   max(a_bhk,b_bhk)),
-        norm(a_bath,min(a_bath,b_bath),  max(a_bath,b_bath)),
-        norm(pps_a, min(pps_a,pps_b),   max(pps_a,pps_b)),
-    ]
-    vals_b = [
-        norm(pb,    min(pa,pb),    max(pa,pb)),
-        norm(b_sqft,min(a_sqft,b_sqft), max(a_sqft,b_sqft)),
-        norm(b_bhk, min(a_bhk,b_bhk),   max(a_bhk,b_bhk)),
-        norm(b_bath,min(a_bath,b_bath),  max(a_bath,b_bath)),
-        norm(pps_b, min(pps_a,pps_b),   max(pps_a,pps_b)),
-    ]
+    if property_a_area_sqft != property_b_area_sqft:
+        roomier = "A" if property_a_area_sqft > property_b_area_sqft else "B"
+        larger_area = abs(property_a_area_sqft - property_b_area_sqft)
+        st.markdown(
+            f"- **More floor space:** Property {roomier} has {larger_area:,.0f} more sq ft."
+        )
+    if property_a_bhk != property_b_bhk:
+        more_bedrooms = "A" if property_a_bhk > property_b_bhk else "B"
+        st.markdown(f"- **More bedrooms:** Property {more_bedrooms} has {abs(property_a_bhk - property_b_bhk)} more bedroom(s).")
+    st.info("There isn’t one best choice for everyone: a lower estimate may suit a tighter budget, while more space or a lower cost per square foot may matter more to you. Estimates are based on curated listings and may differ from sale prices.")
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatterpolar(r=vals_a + [vals_a[0]], theta=categories + [categories[0]],
-                                   fill='toself', name='Property A', line_color='#1a1a2e'))
-    fig.add_trace(go.Scatterpolar(r=vals_b + [vals_b[0]], theta=categories + [categories[0]],
-                                   fill='toself', name='Property B', line_color='#e2b96f', opacity=0.7))
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(visible=True, range=[0, 1], tickfont=dict(color='#1a1a2e')),
-            angularaxis=dict(tickfont=dict(color='#1a1a2e', size=12)),
-        ),
-        paper_bgcolor='#f5f5f0',
-        font=dict(color='#1a1a2e'),
-        showlegend=True,
-        legend=dict(bgcolor='#ffffff', bordercolor='#d9deea', borderwidth=1, font=dict(color='#1a1a2e'))
+    st.markdown("### Explore the finances")
+    finance_property = st.selectbox(
+        "Choose which property estimate to use",
+        ["Property A", "Property B"],
+        key="comparison_finance_property",
+        help="We’ll carry this estimate into the EMI calculator so you can explore a loan payment.",
     )
-    st.plotly_chart(fig, use_container_width=True)
+    selected_estimate = property_a_price if finance_property == "Property A" else property_b_price
+    st.session_state["comparison_property_price_lakhs"] = float(selected_estimate)
+    st.page_link(
+        "pages/finance.py",
+        label="Continue to Finance",
+        icon=":material/account_balance:",
+        width="stretch",
+    )
 
     # Download comparison
     st.download_button(

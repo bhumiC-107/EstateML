@@ -1,15 +1,20 @@
 from pathlib import Path
+import html
 import datetime
-import joblib
+import os
 import pandas as pd
 import streamlit as st
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
+from estate_ml.property_model import load_property_artifacts, predict_property
+from estate_ml.property_ui import friendly_input_message, render_property_inputs
+from estate_ml.history import initialize_history_database
+from estate_ml.forecast_ui import render_future_value_section
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Page configuration
 # ─────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="EstateML — Bengaluru Property Valuation",
+    page_title="EstateML — Bengaluru Property Estimate",
     page_icon="🏠",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -314,79 +319,42 @@ div[data-testid="stAlert"] {
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Constants & Database Setup
+# Paths and prediction-history database
 # ─────────────────────────────────────────────────────────────────────────────
-BASE_DIR    = Path(__file__).resolve().parent
-MODEL_PATH  = BASE_DIR / "final_model.joblib"
-SCALER_PATH = BASE_DIR / "scaler.joblib"
-DB_PATH     = BASE_DIR / "predictions.db"
-
-engine = create_engine(
-    f"sqlite:///{DB_PATH.as_posix()}",
-    connect_args={"check_same_thread": False},
-)
-with engine.begin() as conn:
-    conn.execute(text("""
-        CREATE TABLE IF NOT EXISTS predictions (
-            id              INTEGER PRIMARY KEY AUTOINCREMENT,
-            total_sqft      REAL,
-            bhk             INTEGER,
-            bath            INTEGER,
-            balcony         INTEGER,
-            predicted_price REAL,
-            timestamp       TEXT
-        )
-    """))
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = Path(os.environ.get("ESTATEML_DATA_DIR", str(BASE_DIR))).expanduser()
+DB_PATH = DATA_DIR / "predictions.db"
+engine = initialize_history_database(DB_PATH)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Production Model Inference Pipeline
+# Load the price model and its training categories
 # ─────────────────────────────────────────────────────────────────────────────
 @st.cache_resource
-def load_assets():
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(f"Production model file not found at {MODEL_PATH}")
-    if not SCALER_PATH.exists():
-        raise FileNotFoundError(f"Scaler file not found at {SCALER_PATH}")
-    loaded_scaler = joblib.load(SCALER_PATH)
-    loaded_model  = joblib.load(MODEL_PATH)
-    return loaded_scaler, loaded_model
+def load_assets(artifact_version: int):
+    model, metadata = load_property_artifacts(BASE_DIR / "artifacts" / "model")
+    categories = metadata.get("known_categories_from_random_training_partition", {})
+    localities = categories.get("location", [])
+    return model, metadata, localities, categories
 
 try:
-    scaler, model = load_assets()
-except Exception:
-    st.error("The production valuation model could not be loaded. Please ensure model artifacts are present.")
+    artifact_metadata_path = BASE_DIR / "artifacts" / "model" / "model_metadata.json"
+    model, model_metadata, locality_options, model_categories = load_assets(
+        artifact_metadata_path.stat().st_mtime_ns
+    )
+except Exception as exc:
+    st.info("We can’t open the estimator right now. Please reload the page or contact the project maintainer.")
     st.stop()
-
-_feature_names = list(getattr(scaler, "feature_names_in_", [
-    "total_sqft", "bath", "balcony", "bhk",
-    "price_per_sqft", "sqft_per_bhk", "bath_per_bhk",
-]))
-
-def _run_valuation(sqft: float, bhk: int, bath: int, balcony: int) -> float:
-    """Compute derived features and return estimated price in Lakhs."""
-    row = {
-        "total_sqft":     sqft,
-        "bhk":            bhk,
-        "bath":           bath,
-        "balcony":        balcony,
-        "price_per_sqft": 0.0,
-        "sqft_per_bhk":   sqft / max(bhk, 1),
-        "bath_per_bhk":   bath / max(bhk, 1),
-    }
-    df     = pd.DataFrame([row])[_feature_names]
-    scaled = pd.DataFrame(scaler.transform(df), columns=_feature_names)
-    return float(model.predict(scaled)[0])
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Hero Banner
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="hero-band">
-  <div class="hero-badge">🏙 Bengaluru · Residential Valuation</div>
-  <div class="hero-title">EstateML — Property Valuation</div>
+  <div class="hero-badge">🏙 Bengaluru · Curated listing data</div>
+  <div class="hero-title">EstateML — Property Estimate</div>
   <div class="hero-sub">
-    Instant, data-driven market price estimates for residential homes in Bengaluru.
-    Enter property specifications and click <strong style="color:#f0d080">Estimate Property Value</strong>.
+    Explore an estimate based on the project’s curated Bengaluru listings. Asking prices may differ from final sale prices.
+    Enter property details and click <strong style="color:#f0d080">Estimate Property Value</strong>.
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -404,102 +372,76 @@ with form_col:
             unsafe_allow_html=True,
         )
 
-        r1c1, r1c2 = st.columns(2)
-        with r1c1:
-            total_sqft = st.number_input(
-                "Total Built-Up Area (sq ft)",
-                min_value=200.0,
-                max_value=12000.0,
-                value=1000.0,
-                step=50.0,
-                help="Total built-up or super built-up area in square feet.",
-            )
-            bath = st.number_input(
-                "Bathrooms",
-                min_value=1,
-                max_value=10,
-                value=2,
-                step=1,
-            )
-        with r1c2:
-            bhk = st.number_input(
-                "Bedrooms (BHK)",
-                min_value=1,
-                max_value=10,
-                value=2,
-                step=1,
-            )
-            balcony = st.number_input(
-                "Balconies",
-                min_value=0,
-                max_value=5,
-                value=1,
-                step=1,
-            )
+        property_inputs = render_property_inputs(
+            title="Property details",
+            key="estimate",
+            localities=locality_options,
+            categories=model_categories,
+        )
 
         st.markdown("<div style='height: 0.6rem;'></div>", unsafe_allow_html=True)
-        estimate_clicked = st.button("🏷 Estimate Property Value", type="primary", use_container_width=True)
+        estimate_clicked = st.button("🏷 Estimate Property Value", type="primary", width="stretch")
 
         if estimate_clicked:
             try:
-                predicted_price = _run_valuation(float(total_sqft), int(bhk), int(bath), int(balcony))
+                predicted_price = predict_property(model, property_inputs)
                 st.session_state["last_prediction"] = {
                     "predicted_price": predicted_price,
-                    "inputs": {
-                        "total_sqft": float(total_sqft),
-                        "bhk": int(bhk),
-                        "bath": int(bath),
-                        "balcony": int(balcony),
-                    },
+                    "inputs": property_inputs,
                 }
                 with engine.begin() as conn:
                     conn.execute(
                         text("""INSERT INTO predictions
-                                (total_sqft, bhk, bath, balcony, predicted_price, timestamp)
-                                VALUES (:sqft, :bhk, :bath, :balcony, :price, :ts)"""),
+                                (location, total_sqft, bhk, bath, balcony, predicted_price, timestamp, model_source)
+                                VALUES (:location, :sqft, :bhk, :bath, :balcony, :price, :ts, :source)"""),
                         {
-                            "sqft":    float(total_sqft),
-                            "bhk":     int(bhk),
-                            "bath":    int(bath),
-                            "balcony": int(balcony),
+                            "location": property_inputs["location"],
+                            "sqft":    float(property_inputs["area_sqft"]),
+                            "bhk":     int(property_inputs["BHK"]),
+                            "bath":    int(property_inputs["bathrooms"]),
+                            "balcony": int(property_inputs["balconies"]),
                             "price":   round(predicted_price, 2),
                             "ts":      datetime.datetime.now().isoformat(timespec="seconds"),
+                            "source": "curated_listings",
                         },
                     )
             except Exception as exc:
-                st.error(f"Valuation failed: {exc}")
+                st.info(friendly_input_message(exc))
 
 with result_col:
     with st.container(border=True):
-        last = st.session_state.get("last_prediction")
-        if last:
-            p   = last["predicted_price"]
-            inp = last["inputs"]
-            pps = p * 100_000 / max(inp["total_sqft"], 1)
+        latest_prediction = st.session_state.get("last_prediction")
+        if latest_prediction:
+            predicted_price = latest_prediction["predicted_price"]
+            property_inputs = latest_prediction["inputs"]
+            price_per_sqft = predicted_price * 100_000 / max(property_inputs["area_sqft"], 1)
             st.markdown(f"""
             <div class="val-card">
-              <div class="val-label">Estimated Market Value</div>
-              <div class="val-price">₹{p:,.2f} Lakhs</div>
+              <div class="val-label">Listing-based estimate</div>
+              <div class="val-price">₹{predicted_price:,.2f} Lakhs</div>
               <div class="val-disclaimer">
-                Model-based estimate. Actual closing prices depend on floor level, property age,
-                specific locality micro-market, and builder reputation.
+                Based on the project’s curated listings. Asking prices may differ from completed sales; this is not a formal valuation.
               </div>
               <div class="val-meta">
                 <div class="val-meta-item">
                   <div class="val-meta-label">Price / sq ft</div>
-                  <div class="val-meta-value">₹{pps:,.0f}</div>
+                  <div class="val-meta-value">₹{price_per_sqft:,.0f}</div>
                 </div>
                 <div class="val-meta-item">
                   <div class="val-meta-label">Configuration</div>
-                  <div class="val-meta-value">{inp['bhk']} BHK · {inp['bath']} Bath</div>
+                  <div class="val-meta-value">{property_inputs['BHK']} BHK · {property_inputs['bathrooms']} Bath</div>
+                </div>
+                <div class="val-meta-item">
+                  <div class="val-meta-label">Locality</div>
+                  <div class="val-meta-value">{html.escape(str(property_inputs['location']))}</div>
                 </div>
                 <div class="val-meta-item">
                   <div class="val-meta-label">Total Area</div>
-                  <div class="val-meta-value">{inp['total_sqft']:,.0f} sq ft</div>
+                  <div class="val-meta-value">{property_inputs['area_sqft']:,.0f} sq ft</div>
                 </div>
                 <div class="val-meta-item">
                   <div class="val-meta-label">Balconies</div>
-                  <div class="val-meta-value">{inp['balcony']}</div>
+                  <div class="val-meta-value">{property_inputs['balconies']}</div>
                 </div>
               </div>
             </div>
@@ -516,6 +458,16 @@ with result_col:
             </div>
             """, unsafe_allow_html=True)
 
+latest_prediction = st.session_state.get("last_prediction")
+if latest_prediction:
+    st.markdown("### Plan ahead")
+    with st.expander("Explore possible future values", expanded=False):
+        render_future_value_section(
+            model,
+            model_metadata,
+            latest_prediction["inputs"],
+        )
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Recent Valuations History
 # ─────────────────────────────────────────────────────────────────────────────
@@ -523,7 +475,7 @@ st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
 
 with engine.connect() as conn:
     history_df = pd.read_sql(
-        text("SELECT * FROM predictions ORDER BY id DESC LIMIT 20"), conn
+        text("SELECT * FROM predictions WHERE model_source IN ('property', 'curated_listings') ORDER BY id DESC LIMIT 20"), conn
     )
 
 if not history_df.empty:
@@ -534,13 +486,15 @@ if not history_df.empty:
             unsafe_allow_html=True,
         )
 
-        display_df = history_df[
-            ["timestamp", "total_sqft", "bhk", "bath", "balcony", "predicted_price"]
-        ].copy()
+        display_columns = ["timestamp", "location", "total_sqft", "bhk", "bath", "balcony"]
+        display_columns.append("predicted_price")
+        display_df = history_df[display_columns].copy()
+        display_df["location"] = display_df["location"].fillna("Unknown")
         display_df.columns = [
-            "Date & Time", "Area (sq ft)", "BHK", "Bathrooms", "Balconies", "Estimated Value (₹ Lakhs)"
+            "Date & Time", "Locality", "Area (sq ft)", "BHK", "Bathrooms", "Balconies",
+            "Estimated Value (₹ Lakhs)"
         ]
-        st.dataframe(display_df, use_container_width=True, hide_index=True)
+        st.dataframe(display_df, width="stretch", hide_index=True)
 
         if len(history_df) > 1:
             chart_df = (
@@ -548,4 +502,4 @@ if not history_df.empty:
                 .set_index("timestamp")[["predicted_price"]]
                 .rename(columns={"predicted_price": "Estimated Value (₹ Lakhs)"})
             )
-            st.line_chart(chart_df, use_container_width=True)
+            st.line_chart(chart_df, width="stretch")

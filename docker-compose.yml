@@ -1,9 +1,0 @@
-services:
-  estateml:
-    build: .
-    ports:
-      - "8501:8501"
-    environment:
-      # Optional: configure a remote MLflow tracking server separately.
-      MLFLOW_TRACKING_URI: ${MLFLOW_TRACKING_URI:-}
-    restart: unless-stopped

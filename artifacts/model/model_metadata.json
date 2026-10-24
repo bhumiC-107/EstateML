@@ -1,0 +1,598 @@
+{
+  "label": "curated listing evaluation",
+  "dataset_file": "user-provided curated listings CSV",
+  "dataset_sha256": "a8040de8faf128dfb33c736283bded6eb3076eef7f9b9f72928761126a886f19",
+  "schema_version": "bengaluru-listings-v3",
+  "target": "price_lakhs",
+  "target_unit": "lakhs of INR (1 lakh = INR 100,000)",
+  "area_unit": "square feet",
+  "feature_schema": [
+    "location",
+    "latitude",
+    "longitude",
+    "area_sqft",
+    "BHK",
+    "bathrooms",
+    "balconies",
+    "listing_date",
+    "property_age_years",
+    "condition",
+    "floor_number",
+    "total_floors",
+    "property_type",
+    "furnishing_status",
+    "parking_spaces",
+    "lift",
+    "security",
+    "gym",
+    "swimming_pool",
+    "power_backup",
+    "gated_community"
+  ],
+  "property_id_excluded": true,
+  "target_derived_features_excluded": true,
+  "candidate_algorithms": [
+    "LinearRegression",
+    "DecisionTreeRegressor",
+    "RandomForestRegressor",
+    "KNeighborsRegressor"
+  ],
+  "primary_split": {
+    "type": "train_test_split",
+    "test_size": 0.2,
+    "random_state": 42,
+    "train_rows": 4000,
+    "test_rows": 1000
+  },
+  "cv_strategy": "GridSearchCV, five-fold KFold(shuffle=True, random_state=42), scoring=neg_root_mean_squared_error, refit=True; only the 80% training partition is provided to the search.",
+  "preprocessing": "Each candidate uses a scikit-learn Pipeline with numeric median imputation, categorical Unknown imputation, one-hot encoding (min_frequency=5, handle_unknown=ignore), and date featurization; preprocessing is fitted within each CV fold. Numeric features are scaled only for Linear Regression and KNN.",
+  "engineered_features": [
+    "bhk_x_balconies = BHK * balconies"
+  ],
+  "locality_growth": {
+    "city_annual_growth": -0.004268890401645908,
+    "locality_annual_growth": {
+      "Bannerghatta Road": {
+        "annual_growth": -0.0010899778815188312,
+        "monthly_observations": 43
+      },
+      "Basavanagudi": {
+        "annual_growth": 0.0019794192534692964,
+        "monthly_observations": 40
+      },
+      "Bellandur": {
+        "annual_growth": -0.007757162025794228,
+        "monthly_observations": 45
+      },
+      "Electronic City": {
+        "annual_growth": 0.008968223567149953,
+        "monthly_observations": 46
+      },
+      "HSR Layout": {
+        "annual_growth": -0.022935628244055525,
+        "monthly_observations": 45
+      },
+      "Hebbal": {
+        "annual_growth": -0.007028210551948841,
+        "monthly_observations": 46
+      },
+      "Hennur": {
+        "annual_growth": -0.03164314961793907,
+        "monthly_observations": 43
+      },
+      "Indiranagar": {
+        "annual_growth": 0.04365302174073678,
+        "monthly_observations": 45
+      },
+      "JP Nagar": {
+        "annual_growth": -0.01708162878741483,
+        "monthly_observations": 46
+      },
+      "Jayanagar": {
+        "annual_growth": -0.011359217972181306,
+        "monthly_observations": 44
+      },
+      "Kanakapura Road": {
+        "annual_growth": 0.010769522299959707,
+        "monthly_observations": 42
+      },
+      "Kengeri": {
+        "annual_growth": 0.00891650446684817,
+        "monthly_observations": 42
+      },
+      "Koramangala": {
+        "annual_growth": 0.0011285293878763253,
+        "monthly_observations": 45
+      },
+      "Marathahalli": {
+        "annual_growth": -0.010710680476945929,
+        "monthly_observations": 45
+      },
+      "Rajajinagar": {
+        "annual_growth": 0.0010325809664665899,
+        "monthly_observations": 43
+      },
+      "Sarjapur Road": {
+        "annual_growth": -0.002941065244625212,
+        "monthly_observations": 45
+      },
+      "Thanisandra": {
+        "annual_growth": 0.02594950487068973,
+        "monthly_observations": 44
+      },
+      "Whitefield": {
+        "annual_growth": -0.0014538104508369349,
+        "monthly_observations": 45
+      },
+      "Yelahanka": {
+        "annual_growth": 0.01674157402017221,
+        "monthly_observations": 44
+      },
+      "Yeshwanthpur": {
+        "annual_growth": 0.010799874511058741,
+        "monthly_observations": 45
+      }
+    },
+    "method": "linear_trend_of_monthly_median_asking_price_per_sqft; local trends shrunk to city trend",
+    "scenario_spread": 0.02,
+    "growth_bounds": [
+      -0.1,
+      0.15
+    ]
+  },
+  "training_property_age_range": {
+    "minimum": 0.0,
+    "maximum": 25.0,
+    "median": 6.0
+  },
+  "parameter_grids": {
+    "LinearRegression": {
+      "fit_intercept": [
+        true,
+        false
+      ]
+    },
+    "DecisionTreeRegressor": {
+      "max_depth": [
+        null,
+        10,
+        20
+      ],
+      "min_samples_split": [
+        2,
+        5
+      ],
+      "min_samples_leaf": [
+        1,
+        2,
+        5
+      ]
+    },
+    "RandomForestRegressor": {
+      "n_estimators": [
+        100,
+        200
+      ],
+      "max_depth": [
+        null,
+        16
+      ],
+      "min_samples_split": [
+        2,
+        5
+      ],
+      "min_samples_leaf": [
+        1,
+        2
+      ]
+    },
+    "KNeighborsRegressor": {
+      "n_neighbors": [
+        5,
+        9,
+        15
+      ],
+      "weights": [
+        "uniform",
+        "distance"
+      ],
+      "p": [
+        1,
+        2
+      ]
+    }
+  },
+  "fixed_estimator_parameters": {
+    "LinearRegression": {},
+    "DecisionTreeRegressor": {
+      "random_state": 42
+    },
+    "RandomForestRegressor": {
+      "random_state": 42,
+      "n_jobs": 1
+    },
+    "KNeighborsRegressor": {}
+  },
+  "primary_winner_by_mean_training_cv_rmse": "LinearRegression",
+  "primary_candidate_results": {
+    "LinearRegression": {
+      "best_parameters": {
+        "model__fit_intercept": true
+      },
+      "mean_cv_rmse_lakhs": 51.46503471157407,
+      "baseline_cv_rmse_lakhs": 51.46503471157407,
+      "cv_rmse_improvement_lakhs": 0.0,
+      "tuning_improved_over_baseline": false,
+      "best_fold_rmse_lakhs": [
+        48.83957744993668,
+        52.04702970489926,
+        56.86931901278111,
+        50.64410352141196,
+        48.925143868841374
+      ],
+      "holdout_metrics": {
+        "rmse_lakhs": 47.35754466872249,
+        "mae_lakhs": 34.44722585954103,
+        "r2": 0.8066715558235868,
+        "within_10_percent": 29.7,
+        "within_20_percent": 55.2
+      }
+    },
+    "DecisionTreeRegressor": {
+      "best_parameters": {
+        "model__max_depth": 10,
+        "model__min_samples_leaf": 5,
+        "model__min_samples_split": 2
+      },
+      "mean_cv_rmse_lakhs": 62.04261647260396,
+      "baseline_cv_rmse_lakhs": 74.8158758518699,
+      "cv_rmse_improvement_lakhs": 12.773259379265944,
+      "tuning_improved_over_baseline": true,
+      "best_fold_rmse_lakhs": [
+        59.42236821837008,
+        60.993711608647175,
+        66.56153242615389,
+        61.593632218711,
+        61.64183789113767
+      ],
+      "holdout_metrics": {
+        "rmse_lakhs": 57.66456461049577,
+        "mae_lakhs": 40.129542942512984,
+        "r2": 0.7133608974758359,
+        "within_10_percent": 26.6,
+        "within_20_percent": 50.1
+      }
+    },
+    "RandomForestRegressor": {
+      "best_parameters": {
+        "model__max_depth": null,
+        "model__min_samples_leaf": 2,
+        "model__min_samples_split": 5,
+        "model__n_estimators": 200
+      },
+      "mean_cv_rmse_lakhs": 53.910029757511936,
+      "baseline_cv_rmse_lakhs": 54.63909417653555,
+      "cv_rmse_improvement_lakhs": 0.7290644190236151,
+      "tuning_improved_over_baseline": true,
+      "best_fold_rmse_lakhs": [
+        50.25050148095664,
+        53.326669406914746,
+        60.28831487747785,
+        51.77534266921851,
+        53.909320352991934
+      ],
+      "holdout_metrics": {
+        "rmse_lakhs": 47.56648344711184,
+        "mae_lakhs": 34.007915900237116,
+        "r2": 0.8049618845631918,
+        "within_10_percent": 29.9,
+        "within_20_percent": 56.49999999999999
+      }
+    },
+    "KNeighborsRegressor": {
+      "best_parameters": {
+        "model__n_neighbors": 15,
+        "model__p": 1,
+        "model__weights": "distance"
+      },
+      "mean_cv_rmse_lakhs": 71.08512569276002,
+      "baseline_cv_rmse_lakhs": 76.48081928627043,
+      "cv_rmse_improvement_lakhs": 5.3956935935104156,
+      "tuning_improved_over_baseline": true,
+      "best_fold_rmse_lakhs": [
+        65.08993805211486,
+        70.40468518341694,
+        80.75468645299344,
+        70.15033586073159,
+        69.02598291454325
+      ],
+      "holdout_metrics": {
+        "rmse_lakhs": 66.4059706521479,
+        "mae_lakhs": 47.814094819657896,
+        "r2": 0.6198704258808855,
+        "within_10_percent": 22.1,
+        "within_20_percent": 41.3
+      }
+    }
+  },
+  "primary_selected_holdout_metrics": {
+    "rmse_lakhs": 47.35754466872249,
+    "mae_lakhs": 34.44722585954103,
+    "r2": 0.8066715558235868,
+    "within_10_percent": 29.7,
+    "within_20_percent": 55.2
+  },
+  "chronological_supplementary_evaluation": {
+    "strategy": "80% earlier-date training / 20% later-date test; separate five-fold TimeSeriesSplit GridSearchCV on training dates only.",
+    "train_rows": 3999,
+    "test_rows": 1001,
+    "train_end": "2026-01-04",
+    "test_start": "2026-01-05",
+    "winner_by_mean_training_cv_rmse": "LinearRegression",
+    "candidate_results": {
+      "LinearRegression": {
+        "best_parameters": {
+          "model__fit_intercept": false
+        },
+        "mean_cv_rmse_lakhs": 51.04576090124965,
+        "baseline_cv_rmse_lakhs": 64.60519174726284,
+        "cv_rmse_improvement_lakhs": 13.559430846013186,
+        "tuning_improved_over_baseline": true,
+        "best_fold_rmse_lakhs": [
+          50.09625288590596,
+          49.13509630656829,
+          57.56275834229714,
+          48.66771513544685,
+          49.76698183603
+        ],
+        "holdout_metrics": {
+          "rmse_lakhs": 50.829221928924625,
+          "mae_lakhs": 37.92402204576607,
+          "r2": 0.7595256789279838,
+          "within_10_percent": 28.371628371628372,
+          "within_20_percent": 51.84815184815184
+        }
+      },
+      "DecisionTreeRegressor": {
+        "best_parameters": {
+          "model__max_depth": 10,
+          "model__min_samples_leaf": 5,
+          "model__min_samples_split": 2
+        },
+        "mean_cv_rmse_lakhs": 67.10934608722263,
+        "baseline_cv_rmse_lakhs": 86.36182359524337,
+        "cv_rmse_improvement_lakhs": 19.252477508020732,
+        "tuning_improved_over_baseline": true,
+        "best_fold_rmse_lakhs": [
+          71.61035232591149,
+          61.91168171933919,
+          74.26285052083294,
+          65.19836371522773,
+          62.56348215480184
+        ],
+        "holdout_metrics": {
+          "rmse_lakhs": 65.18023769683161,
+          "mae_lakhs": 42.75650116170662,
+          "r2": 0.6045663135167663,
+          "within_10_percent": 26.273726273726272,
+          "within_20_percent": 49.95004995004995
+        }
+      },
+      "RandomForestRegressor": {
+        "best_parameters": {
+          "model__max_depth": null,
+          "model__min_samples_leaf": 2,
+          "model__min_samples_split": 5,
+          "model__n_estimators": 200
+        },
+        "mean_cv_rmse_lakhs": 55.48835252297364,
+        "baseline_cv_rmse_lakhs": 56.75988771470234,
+        "cv_rmse_improvement_lakhs": 1.2715351917286952,
+        "tuning_improved_over_baseline": true,
+        "best_fold_rmse_lakhs": [
+          54.55368466096521,
+          53.9935811155278,
+          63.81893878584044,
+          54.52453443332084,
+          50.551023619213886
+        ],
+        "holdout_metrics": {
+          "rmse_lakhs": 50.9267021051911,
+          "mae_lakhs": 36.723812652547736,
+          "r2": 0.7586024321685296,
+          "within_10_percent": 28.97102897102897,
+          "within_20_percent": 54.145854145854145
+        }
+      },
+      "KNeighborsRegressor": {
+        "best_parameters": {
+          "model__n_neighbors": 15,
+          "model__p": 1,
+          "model__weights": "distance"
+        },
+        "mean_cv_rmse_lakhs": 73.12251945360555,
+        "baseline_cv_rmse_lakhs": 80.45330263582241,
+        "cv_rmse_improvement_lakhs": 7.330783182216862,
+        "tuning_improved_over_baseline": true,
+        "best_fold_rmse_lakhs": [
+          73.0654882213957,
+          72.28584300348645,
+          77.7608347555766,
+          71.52509864735029,
+          70.9753326402187
+        ],
+        "holdout_metrics": {
+          "rmse_lakhs": 65.85285292561004,
+          "mae_lakhs": 48.52282505303615,
+          "r2": 0.5963629970808328,
+          "within_10_percent": 22.17782217782218,
+          "within_20_percent": 42.25774225774226
+        }
+      }
+    },
+    "selected_holdout_metrics": {
+      "rmse_lakhs": 50.829221928924625,
+      "mae_lakhs": 37.92402204576607,
+      "r2": 0.7595256789279838,
+      "within_10_percent": 28.371628371628372,
+      "within_20_percent": 51.84815184815184
+    }
+  },
+  "quality_audit": {
+    "input_rows": 5000,
+    "kept_rows": 5000,
+    "excluded_rows": 0,
+    "exclusion_reasons": {
+      "invalid_or_nonpositive_target": 0,
+      "invalid_or_nonpositive_area": 0,
+      "invalid_bhk": 0,
+      "invalid_floor_combination": 0
+    },
+    "numeric_values_marked_missing_for_imputation": {
+      "latitude": 0,
+      "longitude": 0,
+      "area_sqft": 0,
+      "BHK": 0,
+      "bathrooms": 0,
+      "balconies": 0,
+      "property_age_years": 0,
+      "floor_number": 0,
+      "total_floors": 0,
+      "parking_spaces": 0,
+      "lift": 0,
+      "security": 0,
+      "gym": 0,
+      "swimming_pool": 0,
+      "power_backup": 0,
+      "gated_community": 0
+    },
+    "missing_by_column_before": {
+      "property_id": 0,
+      "location": 0,
+      "latitude": 0,
+      "longitude": 0,
+      "area_sqft": 0,
+      "BHK": 0,
+      "bathrooms": 0,
+      "balconies": 0,
+      "price_lakhs": 0,
+      "listing_date": 0,
+      "property_age_years": 0,
+      "condition": 0,
+      "floor_number": 0,
+      "total_floors": 0,
+      "property_type": 0,
+      "furnishing_status": 0,
+      "parking_spaces": 0,
+      "lift": 0,
+      "security": 0,
+      "gym": 0,
+      "swimming_pool": 0,
+      "power_backup": 0,
+      "gated_community": 0
+    },
+    "malformed_numeric_values_before": {
+      "latitude": 0,
+      "longitude": 0,
+      "area_sqft": 0,
+      "BHK": 0,
+      "bathrooms": 0,
+      "balconies": 0,
+      "property_age_years": 0,
+      "floor_number": 0,
+      "total_floors": 0,
+      "parking_spaces": 0,
+      "lift": 0,
+      "security": 0,
+      "gym": 0,
+      "swimming_pool": 0,
+      "power_backup": 0,
+      "gated_community": 0,
+      "price_lakhs": 0
+    },
+    "nonfinite_numeric_values_before": {
+      "latitude": 0,
+      "longitude": 0,
+      "area_sqft": 0,
+      "BHK": 0,
+      "bathrooms": 0,
+      "balconies": 0,
+      "property_age_years": 0,
+      "floor_number": 0,
+      "total_floors": 0,
+      "parking_spaces": 0,
+      "lift": 0,
+      "security": 0,
+      "gym": 0,
+      "swimming_pool": 0,
+      "power_backup": 0,
+      "gated_community": 0,
+      "price_lakhs": 0
+    },
+    "malformed_listing_dates_before": 0,
+    "duplicate_full_rows": 0,
+    "duplicate_property_ids": 0,
+    "duplicate_feature_signatures": 0,
+    "price_per_sqft_lakhs": {
+      "count": 5000.0,
+      "mean": 0.1209035976400178,
+      "std": 0.044347945318518815,
+      "min": 0.03222562531904033,
+      "25%": 0.08839818291740839,
+      "50%": 0.11542655656874314,
+      "75%": 0.14612057611440898,
+      "max": 0.3399477958236659
+    }
+  },
+  "limitations": [
+    "The dataset contains user-curated listing information; asking prices may differ from completed sale prices.",
+    "Evaluation metrics measure performance on this dataset and are not guarantees for future listings.",
+    "Holdout metrics are evaluation results, not prediction intervals or guarantees."
+  ],
+  "scikit_learn_version": "1.9.1",
+  "model_name": "LinearRegression",
+  "model_parameters": {
+    "model__fit_intercept": true
+  },
+  "training_rows": 4000,
+  "known_categories_from_random_training_partition": {
+    "location": [
+      "Bannerghatta Road",
+      "Basavanagudi",
+      "Bellandur",
+      "Electronic City",
+      "HSR Layout",
+      "Hebbal",
+      "Hennur",
+      "Indiranagar",
+      "JP Nagar",
+      "Jayanagar",
+      "Kanakapura Road",
+      "Kengeri",
+      "Koramangala",
+      "Marathahalli",
+      "Rajajinagar",
+      "Sarjapur Road",
+      "Thanisandra",
+      "Whitefield",
+      "Yelahanka",
+      "Yeshwanthpur"
+    ],
+    "condition": [
+      "Excellent",
+      "Good",
+      "Needs renovation",
+      "New"
+    ],
+    "property_type": [
+      "Apartment",
+      "Independent House",
+      "Villa"
+    ],
+    "furnishing_status": [
+      "Furnished",
+      "Semi-furnished",
+      "Unfurnished"
+    ]
+  }
+}

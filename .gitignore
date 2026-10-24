@@ -9,10 +9,8 @@ __pycache__/
 *$py.class
 .pytest_cache/
 
-# Local databases & run caches
+# Local databases
 predictions.db
-mlflow.db
-mlruns/
 
 # System / OS
 .DS_Store
