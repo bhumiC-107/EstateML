@@ -4,17 +4,7 @@ EstateML estimates Bengaluru property prices using user-curated live listings an
 
 > **About these estimates:** Listings reflect asking prices and research at collection time. They may differ from completed sale prices. Evaluation scores describe performance on this dataset; they do not guarantee future prices.
 
-## Install and run
-
-Use Python 3.12 from the repository root:
-
-```powershell
-py -3.12 -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python -m streamlit run app.py
-```
-
+Try the website here :https://estateml-dre4q7qeekrjfk95v2sjzk.streamlit.app/
 The app opens with the estimate page. The sidebar also contains Property Compare and Finance.
 
 ## Train the model
