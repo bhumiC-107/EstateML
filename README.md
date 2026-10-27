@@ -44,13 +44,3 @@ python e2e_test.py
 This checkout contains the curated-listing estimator, its training code, the property comparison page, and finance tools. The former dataset and model pipeline have been removed.
 
 Prediction history is stored in local SQLite. Hosted environments with ephemeral storage may lose it after restart. Set `ESTATEML_DATA_DIR` to select a writable history directory.
-
-## Optional synthetic-data predictor
-
-The **Synthetic Price Estimate** page is an isolated demonstration using `data/bengaluru_property_prices_synthetic.csv`. Its model and metadata are stored under `artifacts/model/synthetic_price/`. The existing home estimator and its model artifact are unchanged. The sample data is synthetic and its estimates should not be used as real-market valuations.
-
-To retrain only this demo model, use its separate artifact directory:
-
-```bash
-python -m estate_ml.train_model --data data/bengaluru_property_prices_synthetic.csv --artifact-dir artifacts/model/synthetic_price
-```
