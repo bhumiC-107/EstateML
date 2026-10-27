@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 from datetime import date
 
-import streamlit as st
+import streamlit as st  # type: ignore[import-not-found]
 
 from estate_ml.property_model import FEATURE_SCHEMA, normalize_property_location
 

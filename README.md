@@ -37,6 +37,7 @@ python e2e_test.py
 ## Active pages
 
 - `app.py` — property price estimates and recent estimates.
+- `pages/Budget_Search.py` — model-based hypothetical configurations within a budget.
 - `pages/Compare.py` — side-by-side estimates from the same property model.
 - `pages/finance.py` — finance calculators.
 
