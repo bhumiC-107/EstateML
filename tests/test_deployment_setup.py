@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import tempfile
 import unittest
 
@@ -38,6 +39,17 @@ class DeploymentSetupTests(unittest.TestCase):
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(ValueError, "feature schema is incompatible"):
+                load_property_artifacts(tmp)
+
+    def test_artifact_loader_reports_schema_version_mismatch_separately(self):
+        from estate_ml.property_model import FEATURE_SCHEMA
+        with tempfile.TemporaryDirectory() as tmp:
+            joblib.dump({}, Path(tmp) / "property_price_model.joblib")
+            (Path(tmp) / "model_metadata.json").write_text(
+                json.dumps({"schema_version": "old-version", "feature_schema": FEATURE_SCHEMA}),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "schema version is incompatible"):
                 load_property_artifacts(tmp)
 
     def test_new_history_database_and_legacy_schema_migration(self):

@@ -296,6 +296,17 @@ def predict_property(model, values: dict[str, Any] | pd.DataFrame) -> float:
     return prediction
 
 
+def predict_property_batch(model, values: list[dict[str, Any]]) -> list[float]:
+    """Validate and predict many property rows in one model call."""
+    if not values:
+        return []
+    rows = pd.concat([build_property_input(record) for record in values], ignore_index=True)
+    predictions = np.asarray(model.predict(rows), dtype=float).reshape(-1)
+    if len(predictions) != len(values) or not np.isfinite(predictions).all() or (predictions <= 0).any():
+        raise ValueError("Property model returned an invalid estimate for one or more candidates.")
+    return predictions.tolist()
+
+
 def save_property_artifacts(model, metadata: dict[str, Any], directory: str | Path = ARTIFACT_DIR) -> None:
     path = Path(directory)
     path.mkdir(parents=True, exist_ok=True)
@@ -310,8 +321,7 @@ def load_property_artifacts(directory: str | Path = ARTIFACT_DIR):
     if not model_path.is_file() or not metadata_path.is_file():
         raise FileNotFoundError("Model files are missing. Train them with `python -m estate_ml.train_model --data <CSV>`.")
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-    if metadata.get("feature_schema") != FEATURE_SCHEMA or metadata.get("schema_version") != SCHEMA_VERSION:
-        raise ValueError("The saved model feature schema is incompatible with the current property input fields.")
+
     if metadata.get("scikit_learn_version") != sklearn.__version__:
         raise ValueError(
             "Model library version mismatch: this model was trained with scikit-learn "

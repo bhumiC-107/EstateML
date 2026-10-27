@@ -223,7 +223,6 @@ def main(argv=None):
     source = Path(args.data)
     raw_listings = pd.read_csv(source)
     features, target_prices, quality_report = prepare_property_data(raw_listings)
-
     # ── Primary random holdout and training-only model selection ───────────
     # Split first. Baseline CV and GridSearchCV only receive the 80% partition.
     train_indices, test_indices = train_test_split(
