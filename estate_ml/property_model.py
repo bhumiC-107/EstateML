@@ -311,7 +311,7 @@ def load_property_artifacts(directory: str | Path = ARTIFACT_DIR):
         raise FileNotFoundError("Model files are missing. Train them with `python -m estate_ml.train_model --data <CSV>`.")
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     if metadata.get("feature_schema") != FEATURE_SCHEMA or metadata.get("schema_version") != SCHEMA_VERSION:
-        raise ValueError("The saved model does not match the current property input fields.")
+        raise ValueError("The saved model feature schema is incompatible with the current property input fields.")
     if metadata.get("scikit_learn_version") != sklearn.__version__:
         raise ValueError(
             "Model library version mismatch: this model was trained with scikit-learn "
